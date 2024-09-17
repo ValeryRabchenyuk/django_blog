@@ -1,14 +1,15 @@
 """Модуль обработки публикаций."""
 from django.shortcuts import get_object_or_404, render
-from django.utils import timezone
 from django.db.models import Q
 
 from blog.models import Category, Post
-from .utils import post_filter
+from .utils import post_filter, post_paginator
+
 
 def index(request):
     posts = post_filter(Post.objects).order_by('-pub_date')[:5]
-    return render(request, 'blog/index.html', {'post_list': posts})
+    page_obj = post_paginator(request, posts)
+    return render(request, 'blog/index.html', {'page_obj': page_obj})
 
 
 def post_detail(request, id):
@@ -24,5 +25,6 @@ def category_posts(request, category_slug):
         is_published=True
     )
     post_list = post_filter(category.posts)
+    page_obj = post_paginator(request, post_list)
     return render(request, 'blog/category.html', {
-        'category': category, 'post_list': post_list})
+        'category': category, 'page_obj': page_obj})
