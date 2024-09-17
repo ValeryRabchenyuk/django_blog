@@ -21,5 +21,5 @@ urlpatterns = [
          views.delete_comment, name='delete_comment'),
     # профиль пользователя
     path('<slug:username>/', views.profile, name='profile'),
-    path('edit/', views.edit_profile, name='edit_profile'),    
-]
+    path('edit/', views.edit_profile, name='edit_profile'),
+    ]

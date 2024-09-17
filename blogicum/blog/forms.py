@@ -17,8 +17,8 @@ class CommentForm(forms.ModelForm):
         fields = ('text',)
 
 
-# class UserForm(forms.ModelForm):
+class UserForm(forms.ModelForm):
 
-#     class Meta:
-#         model = User
-#         fields = ('username', 'first_name', 'last_name', 'email')
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')
