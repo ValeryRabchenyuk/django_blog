@@ -4,13 +4,7 @@ from django.utils import timezone
 from django.db.models import Q
 
 from blog.models import Category, Post
-
-
-def post_filter(queryset):
-    return queryset.filter(is_published=True,
-                           category__is_published=True,
-                           pub_date__lte=timezone.now())
-
+from .utils import post_filter
 
 def index(request):
     posts = post_filter(Post.objects).order_by('-pub_date')[:5]
