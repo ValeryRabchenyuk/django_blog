@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import path
 
 from . import views
 
@@ -20,6 +20,7 @@ urlpatterns = [
          views.edit_comment, name='edit_comment'),
     path('posts/<int:id>/delete_comment/<int:comment_id>/',
          views.delete_comment, name='delete_comment'),
+    # профиль
     path('profile/edit_profile/', views.edit_profile, name='edit_profile'),
     path('profile/<slug:username>/', views.profile, name='profile'),
 ]
