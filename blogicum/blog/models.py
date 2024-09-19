@@ -55,7 +55,7 @@ class Location(PublishedModel):
 
 
 class Post(PublishedModel):
-    title = models.CharField(max_length=TEXT_LENGHT, verbose_name='Заголово')
+    title = models.CharField(max_length=TEXT_LENGHT, verbose_name='Заголовок')
     text = models.TextField(verbose_name='Текст')
     pub_date = models.DateTimeField(
         verbose_name='Дата и время публикации',
@@ -67,15 +67,14 @@ class Post(PublishedModel):
         User,
         on_delete=models.CASCADE,
         verbose_name='Автор публикации',
-        related_name='posts'
     )
 
     location = models.ForeignKey(
         Location,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         verbose_name='Местоположение',
-        related_name='posts'
     )
 
     category = models.ForeignKey(
@@ -83,7 +82,6 @@ class Post(PublishedModel):
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='Категория',
-        related_name='posts'
     )
 
     image = models.ImageField('Фото', upload_to='posts_images', blank=True)
@@ -91,6 +89,7 @@ class Post(PublishedModel):
     class Meta:
         verbose_name = 'публикация'
         verbose_name_plural = 'Публикации'
+        default_related_name = 'posts'
 
     def __str__(self):
         return self.title[:CHAR_LIMIT]
@@ -102,7 +101,6 @@ class Comment(models.Model):
         Post,
         on_delete=models.CASCADE,
         verbose_name='Комментарий',
-        related_name='comments',
     )
     created_at = models.DateTimeField(auto_now_add=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -110,6 +108,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
         ordering = ('created_at',)
 
     def __str__(self):
