@@ -7,8 +7,6 @@ from .forms import PostForm, CommentForm, UserForm
 from .models import Category, Post, Comment, User
 from .utils import post_filter, post_paginator
 
-from .constants import PAGINATOR_NUMBER
-
 
 def count_comments(obj):
     """Подсчёт комментариев."""
@@ -28,10 +26,13 @@ def post_detail(request, id):
     """Страница с информацией о посте."""
     posts = get_object_or_404(Post, Q(pk=id))
     if not posts.author == request.user:
-        posts = get_object_or_404(post_filter(Post.objects.select_related('category', 'location', 'author')), id=id)
+        posts = get_object_or_404(post_filter(
+            Post.objects.select_related('category', 'location', 'author')), 
+            id=id)
     form = CommentForm()
     comments = posts.comments.select_related('author')
-    return render(request, 'blog/detail.html', {'post': posts, 'form': form, 'comments': comments})
+    return render(request, 'blog/detail.html', {
+        'post': posts, 'form': form, 'comments': comments})
 
 
 def category_posts(request, category_slug):
