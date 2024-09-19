@@ -1,8 +1,7 @@
 """Модуль обработки публикаций."""
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
-from django.db.models import Q
-from django.db.models.aggregates import Count
+from django.db.models import Q, Count
 
 from .forms import PostForm, CommentForm, UserForm
 from .models import Category, Post, Comment, User
@@ -20,18 +19,19 @@ def count_comments(obj):
 
 def index(request):
     """Главная страница."""
-    posts = post_filter(Post.objects).order_by('-pub_date')[:PAGINATOR_NUMBER]
+    posts = count_comments(post_filter(Post.objects))
     page_obj = post_paginator(request, posts)
     return render(request, 'blog/index.html', {'page_obj': page_obj})
 
 
 def post_detail(request, id):
     """Страница с информацией о посте."""
-    posts = get_object_or_404(
-        post_filter(Post.objects.select_related('category', 'location', 'author')), Q(pk=id))
+    posts = get_object_or_404(Post, Q(pk=id))
+    if not posts.author == request.user:
+        posts = get_object_or_404(post_filter(Post.objects.select_related('category', 'location', 'author')), id=id)
     form = CommentForm()
     comments = posts.comments.select_related('author')
-    return render(request, 'blog/detail.html', {'posts': posts, 'form': form, 'comments': comments})
+    return render(request, 'blog/detail.html', {'post': posts, 'form': form, 'comments': comments})
 
 
 def category_posts(request, category_slug):
@@ -41,7 +41,7 @@ def category_posts(request, category_slug):
         slug=category_slug,
         is_published=True
     )
-    post_list = post_filter(category.posts)
+    post_list = post_filter(category.posts).order_by('-pub_date')
     page_obj = post_paginator(request, post_list)
     return render(request, 'blog/category.html', {
         'category': category, 'page_obj': page_obj})
@@ -50,10 +50,7 @@ def category_posts(request, category_slug):
 def profile(request, username):
     """Страница пользователя."""
     profile = get_object_or_404(User, username=username)
-    posts = (Post.objects.filter(author=profile)
-             .annotate(count_comments=Count('comments'))
-             .order_by('-pub_date')
-             )
+    posts = count_comments(Post.objects.filter(author=profile))
     page_obj = post_paginator(request, posts)
     context = {'profile': profile,
                'page_obj': page_obj}
@@ -63,9 +60,6 @@ def profile(request, username):
 @login_required
 def edit_profile(request):
     """Редактирование страницы пользователя."""
-    # user = get_object_or_404(
-    #     User,
-    #     username=request.user.username)
     form = UserForm(request.POST or None, instance=request.user)
     if form.is_valid():
         form.save()
@@ -138,7 +132,7 @@ def edit_comment(request, id, comment_id):
     if form.is_valid():
         form.save()
         return redirect('blog:post_detail', id)
-    return render(request, 'blog/comment.html', {'form': form})
+    return render(request, 'blog/create.html', {'form': form})
 
 
 @login_required
