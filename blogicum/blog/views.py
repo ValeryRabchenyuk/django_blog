@@ -2,10 +2,17 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
 from django.db.models import Q
+from django.db.models.aggregates import Count
 
 from .forms import PostForm, CommentForm, UserForm
 from .models import Category, Post, Comment, User
 from .utils import post_filter, post_paginator
+
+
+def count_comments(obj):
+    return obj.annotate(
+        comment_count=Count('comments')
+    ).all().order_by('-pub_date')
 
 
 def index(request):
@@ -30,6 +37,18 @@ def category_posts(request, category_slug):
     page_obj = post_paginator(request, post_list)
     return render(request, 'blog/category.html', {
         'category': category, 'page_obj': page_obj})
+
+
+def profile(request, username):
+    profile = get_object_or_404(User, username=username)
+    posts = (Post.objects.filter(author=profile)
+             .annotate(count_comments=Count('comments'))
+             .order_by('-pub_date')
+             )
+    page_obj = post_paginator(request, posts)
+    context = {'profile': profile,
+               'page_obj': page_obj}
+    return render(request, 'blog/profile.html', context)
 
 
 @login_required
@@ -112,22 +131,6 @@ def delete_comment(request, id, comment_id):
         return redirect('blog:post_detail', id)
     context = {'comment': comment}
     return render(request, 'blog/comment.html', context)
-
-
-def profile(request, username):
-    """Отображение страницы пользователя"""
-    profile = get_object_or_404(User, username=username)
-    posts = get_posts(author=profile)
-    if request.user != profile:
-        posts = get_posts(
-            is_published=True,
-            category__is_published=True,
-            pub_date__lte=datetime.now(),
-            author=profile)
-    page_obj = post_paginator(request, posts)
-    context = {'profile': profile,
-               'page_obj': page_obj}
-    return render(request, 'blog/profile.html', context)
 
 
 @login_required
