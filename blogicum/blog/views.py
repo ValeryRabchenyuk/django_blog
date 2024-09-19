@@ -27,7 +27,7 @@ def post_detail(request, id):
     posts = get_object_or_404(Post, Q(pk=id))
     if not posts.author == request.user:
         posts = get_object_or_404(post_filter(
-            Post.objects.select_related('category', 'location', 'author')), 
+            Post.objects.select_related('category', 'location', 'author')),
             id=id)
     form = CommentForm()
     comments = posts.comments.select_related('author')
