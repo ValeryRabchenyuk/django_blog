@@ -1,18 +1,11 @@
 """Модуль обработки публикаций."""
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
-from django.db.models import Q, Count
+from django.db.models import Q,
 
 from .forms import PostForm, CommentForm, UserForm
 from .models import Category, Post, Comment, User
-from .utils import post_filter, post_paginator
-
-
-def count_comments(obj):
-    """Подсчёт комментариев."""
-    return obj.annotate(
-        comment_count=Count('comments')
-    ).all().order_by('-pub_date')
+from .utils import post_filter, post_paginator, count_comments
 
 
 def index(request):
