@@ -104,6 +104,7 @@ def delete_post(request, id):
         return render(request, 'blog/create.html', context)
     return redirect('blog:post_detail', id)
 
+
 @login_required
 def add_comment(request, id):
     """Комментирование публикации."""
