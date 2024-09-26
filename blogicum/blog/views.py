@@ -1,11 +1,14 @@
 """Модуль обработки публикаций."""
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
-from django.db.models import Q,
+from django.db.models import Q
 
 from .forms import PostForm, CommentForm, UserForm
 from .models import Category, Post, Comment, User
-from .utils import post_filter, post_paginator, count_comments
+from .utils import (post_filter,
+                    post_paginator,
+                    count_comments,
+                    get_object_or_404_with_author_check)
 
 
 def index(request):
@@ -77,31 +80,29 @@ def create_post(request):
 
 @login_required
 def edit_post(request, id):
-    """Редактирование публикации."""
-    post = get_object_or_404(Post, id=id)
-    if request.user != post.author:
-        return redirect('blog:post_detail', id)
-    form = PostForm(request.POST or None, instance=post)
-    if form.is_valid():
-        form.save()
-        return redirect('blog:post_detail', id)
-    context = {'form': form}
-    return render(request, 'blog/create.html', context)
+    post = get_object_or_404_with_author_check(Post, id, request)
+    if post:
+        form = PostForm(request.POST or None, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect('blog:post_detail', id)
+        context = {'form': form}
+        return render(request, 'blog/create.html', context)
+    return redirect('blog:post_detail', id)
 
 
 @login_required
 def delete_post(request, id):
     """Удаление публикации."""
-    post = get_object_or_404(Post, id=id)
-    if request.user != post.author:
-        return redirect('blog:post_detail', id)
-    form = PostForm(request.POST or None, instance=post)
-    if request.method == 'POST':
-        post.delete()
-        return redirect('blog:index')
-    context = {'form': form}
-    return render(request, 'blog/create.html', context)
-
+    post = get_object_or_404_with_author_check(Post, id, request)
+    if post:
+        form = PostForm(request.POST or None, instance=post)
+        if request.method == 'POST':
+            post.delete()
+            return redirect('blog:index')
+        context = {'form': form}
+        return render(request, 'blog/create.html', context)
+    return redirect('blog:post_detail', id)
 
 @login_required
 def add_comment(request, id):
@@ -119,23 +120,23 @@ def add_comment(request, id):
 @login_required
 def edit_comment(request, id, comment_id):
     """Редактирование комментария."""
-    comment = get_object_or_404(Comment, id=comment_id)
-    if request.user != comment.author:
-        return redirect('blog:post_detail', id)
-    form = CommentForm(request.POST or None, instance=comment)
-    if form.is_valid():
-        form.save()
-        return redirect('blog:post_detail', id)
-    return render(request, 'blog/create.html', {'form': form})
+    comment = get_object_or_404_with_author_check(Comment, comment_id, request)
+    if comment:
+        form = CommentForm(request.POST or None, instance=comment)
+        if form.is_valid():
+            form.save()
+            return redirect('blog:post_detail', id)
+        return render(request, 'blog/create.html', {'form': form})
+    return redirect('blog:post_detail', id)
 
 
 @login_required
 def delete_comment(request, id, comment_id):
     """Удаление комментария."""
-    comment = get_object_or_404(Comment, id=comment_id)
-    if request.user != comment.author:
-        return redirect('blog:post_detail', id)
-    if request.method == 'POST':
-        comment.delete()
-        return redirect('blog:post_detail', id)
-    return render(request, 'blog/comment.html', {'comment': comment})
+    comment = get_object_or_404_with_author_check(Comment, comment_id, request)
+    if comment:
+        if request.method == 'POST':
+            comment.delete()
+            return redirect('blog:post_detail', id)
+        return render(request, 'blog/comment.html', {'comment': comment})
+    return redirect('blog:post_detail', id)

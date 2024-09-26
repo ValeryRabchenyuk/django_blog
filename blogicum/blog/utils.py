@@ -6,6 +6,7 @@ from .constants import PAGINATOR_NUMBER
 
 from django.db.models import Count
 
+from django.shortcuts import get_object_or_404
 
 def post_filter(queryset):
     return queryset.filter(is_published=True,
@@ -25,3 +26,11 @@ def count_comments(obj):
     return obj.annotate(
         comment_count=Count('comments')
     ).all().order_by('-pub_date')
+
+
+def get_object_or_404_with_author_check(model, id, request):
+    """Проверка авторства."""
+    obj = get_object_or_404(model, id=id)
+    if request.user != obj.author:
+        return None
+    return obj
