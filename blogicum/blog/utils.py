@@ -8,6 +8,7 @@ from django.db.models import Count
 
 from django.shortcuts import get_object_or_404
 
+
 def post_filter(queryset):
     return queryset.filter(is_published=True,
                            category__is_published=True,
